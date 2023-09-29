@@ -1,103 +1,138 @@
+import 'package:app/home.dart';
+import 'package:app/widget/genLoginSignupHeader.dart';
+import 'package:app/widget/getTextFormField.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
+class LoginForm extends StatefulWidget {
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  _LoginFormState createState() => _LoginFormState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginFormState extends State<LoginForm> {
+  Future<SharedPreferences> _pref = SharedPreferences.getInstance();
+  // final _formKey = new GlobalKey<FormState>();
+  final _conUsernm = TextEditingController();
+  final _conUserId = TextEditingController();
+  final _conPassword = TextEditingController();
+  var dbHelper;
+
+  @override
+  // void initState() {
+  //   super.initState();
+  //   dbHelper = DbHelper();
+  // }
+
+  login() async {
+    String uid = _conUserId.text;
+    // String uname = _conUsernm.text;
+    String passwd = _conPassword.text;
+
+    if (uid.isEmpty) {
+      AlertDialog(
+        title: Text(
+          "Please Enter User ID",
+        ),
+      );
+      // alertDialog(context, "Please Enter User ID");
+    } else if (passwd.isEmpty) {
+      AlertDialog(
+        title: Text(
+          "Please Enter Password",
+        ),
+      );
+      // alertDialog(context, "Please Enter Password");
+    } else {
+      await dbHelper.getLoginUser(uid, passwd).then((userData) {
+        if (userData != null) {
+          (userData).whenComplete(() {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => Home()),
+                (Route<dynamic> route) => true);
+          });
+        } else {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => LoginForm(),
+              ));
+        }
+      }).catchError((error) {
+        print(error);
+        AlertDialog(
+          title: Text(
+            "Login Fail",
+          ),
+        );
+        // alertDialog(context, "Error: Login Fail");
+      });
+    }
+  }
+
+  // Future setSP(UserModel user) async {
+  //   final SharedPreferences sp = await _pref;
+
+  //   sp.setString("user_id", user.user_id!);
+  //   sp.setString("user_name", user.user_name!);
+  //   sp.setString("password", user.password!);
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("GeeksforGeeks"),
-      ),
       body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 110.0),
-              child: Center(
-                child: Container(
-                    width: 200,
-                    height: 100,
-                    /*decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(50.0)),*/
-                    child: Image.asset('assets/images/Instagram.png')),
-              ),
-            ),
-            Padding(
-              //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              child: TextField(
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Phone number, email or username',
-                    hintText: 'Enter valid email id as abc@gmail.com'),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 15.0, right: 15.0, top: 15, bottom: 0),
-              //padding: EdgeInsets.symmetric(horizontal: 15),
-              child: TextField(
-  
-                obscureText: true,
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Password',
-                    hintText: 'Enter secure password'),
-              ),
-            ),
-  
-          SizedBox(
-            height: 65,
-            width: 360,
-            child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: ElevatedButton(
-                    child: Text( 'Log in ', style: TextStyle(color: Colors.white, fontSize: 20),
+        scrollDirection: Axis.vertical,
+        child: Container(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                genLoginSignupHeader('Login'),
+                SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: Image.asset(
+                        'assets/images/app.png') // Replace with your logo asset
                     ),
-                    onPressed: (){
-                      print('Successfully log in ');
+                getTextFormField(
+                    controller: _conUserId,
+                    icon: Icons.person,
+                    hintName: 'User ID'),
+                SizedBox(height: 10.0),
+                getTextFormField(
+                  controller: _conPassword,
+                  icon: Icons.lock,
+                  hintName: 'Password',
+                  isObscureText: true,
+                ),
+                Container(
+                  margin: EdgeInsets.all(30.0),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.blue[400],
+                      minimumSize: Size(
+                        10,
+                        50,
+                      ),
+                    ),
+                    child: Text(
+                      'Login',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (_) => Home()));
                     },
-  
                   ),
                 ),
-              ),
-          ),
-  
-            SizedBox(
-              height: 50,
+              ],
             ),
-            Container(
-                child: Center(
-                  child: Row(
-                    children: [
-  
-                      Padding(
-                        padding: const EdgeInsets.only(left: 62),
-                        child: Text('Forgot your login details? '),
-                      ),
-  
-                      Padding(
-                        padding: const EdgeInsets.only(left:1.0),
-                        child: InkWell(
-                          onTap: (){
-                            print('hello');
-                          },
-                            child: Text('Get help logging in.', style: TextStyle(fontSize: 14, color: Colors.blue),)),
-                      )
-                    ],
-                  ),
-                )
-            )
-          ],
+          ),
         ),
       ),
     );
